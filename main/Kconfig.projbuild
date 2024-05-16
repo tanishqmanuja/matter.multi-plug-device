@@ -1,0 +1,6 @@
+ menu "Four Plug Device"
+    config MAX_CONFIGURABLE_PLUGS
+        int "Maximum physical configurable plugs"
+        default 4
+        range 1 4
+endmenu
