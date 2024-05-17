@@ -18,12 +18,14 @@
 #include "esp_openthread_types.h"
 #endif
 
-#define DEFAULT_POWER false
+#define DEFAULT_POWER true
 
-#define GPIO_CHANNEL_1 (gpio_num_t)GPIO_NUM_2
-#define GPIO_CHANNEL_2 (gpio_num_t)GPIO_NUM_12
-#define GPIO_CHANNEL_3 (gpio_num_t)GPIO_NUM_13
-#define GPIO_CHANNEL_4 (gpio_num_t)GPIO_NUM_14
+#define GPIO_CHANNEL_POWER (gpio_num_t)GPIO_NUM_4
+
+#define GPIO_CHANNEL_1 (gpio_num_t)GPIO_NUM_32
+#define GPIO_CHANNEL_2 (gpio_num_t)GPIO_NUM_33
+#define GPIO_CHANNEL_3 (gpio_num_t)GPIO_NUM_27
+#define GPIO_CHANNEL_4 (gpio_num_t)GPIO_NUM_26
 
 struct gpio_plug
 {
@@ -57,6 +59,15 @@ app_driver_handle_t app_driver_plugin_unit_init(gpio_plug* plug);
  * @return error in case of failure.
  */
 esp_err_t app_driver_plugin_unit_set_defaults(uint16_t endpoint_id, gpio_plug* plug);
+
+/** Initialize the power driver
+ *
+ * This initializes the power driver associated with the selected board.
+ *
+ * @return Handle on success.
+ * @return NULL in case of failure.
+ */
+app_driver_handle_t app_driver_plugin_unit_power_init();
 
 /** Initialize the button driver
  *

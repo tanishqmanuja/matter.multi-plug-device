@@ -48,7 +48,7 @@ esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, uint16_
         if (attribute_id == OnOff::Attributes::OnOff::Id) {
            int gpio_index = get_gpio_index(endpoint_id);
            if (gpio_index != -1){
-                gpio_set_level(gpio.at(gpio_index), val->val.b);
+                gpio_set_level(gpio.at(gpio_index), !val->val.b);
            } 
         }
     }
@@ -60,6 +60,7 @@ app_driver_handle_t app_driver_plugin_unit_init(gpio_plug* plug)
 {
     /* Initialize plug */
     gpio_set_direction(plug->GPIO_PIN_VALUE, GPIO_MODE_OUTPUT);
+    gpio_set_level(plug->GPIO_PIN_VALUE, DEFAULT_POWER);
     return (app_driver_handle_t)plug;
 }
 
@@ -79,11 +80,17 @@ esp_err_t app_driver_plugin_unit_set_defaults(uint16_t endpoint_id, gpio_plug* p
         esp_matter_attr_val_t val = esp_matter_invalid(NULL);
         attribute::get_val(attribute, &val);
 
-        err |= gpio_set_level(gpio_num, val.val.b);
+        err |= gpio_set_level(gpio_num, !val.val.b);
 
         // ESP_LOGI(TAG, "Restored Endpoint id: %d, val : %d", endpoint_id, val.val.b);
     } 
     return err;
+}
+
+app_driver_handle_t app_driver_plugin_unit_power_init() {
+    gpio_set_direction(GPIO_CHANNEL_POWER, GPIO_MODE_OUTPUT);
+    gpio_set_level(GPIO_CHANNEL_POWER, true);
+    return nullptr;
 }
 
 app_driver_handle_t app_driver_button_init()

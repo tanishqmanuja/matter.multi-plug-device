@@ -242,6 +242,8 @@ extern "C" void app_main()
     struct gpio_plug plug4 = { .GPIO_PIN_VALUE = GPIO_CHANNEL_4 };
     create_plug(&plug4, node);
 
+    app_driver_plugin_unit_power_init();
+
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
     /* Set OpenThread platform config */
     esp_openthread_platform_config_t config = {
