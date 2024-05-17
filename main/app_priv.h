@@ -8,27 +8,35 @@
 
 #pragma once
 
+#include <cstdint>
 #include <esp_err.h>
 #include <esp_matter.h>
 #include <hal/gpio_types.h>
+#include "soc/gpio_num.h"
 
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
 #include "esp_openthread_types.h"
 #endif
+
+#define DEFAULT_POWER false
+
+#define GPIO_CHANNEL_1 (gpio_num_t)GPIO_NUM_2
+#define GPIO_CHANNEL_2 (gpio_num_t)GPIO_NUM_12
+#define GPIO_CHANNEL_3 (gpio_num_t)GPIO_NUM_13
+#define GPIO_CHANNEL_4 (gpio_num_t)GPIO_NUM_14
 
 struct gpio_plug
 {
       gpio_num_t GPIO_PIN_VALUE;
 };
 
-struct plug_endpoint
+struct plugin_unit_endpoint
 {
+    uint16_t endpoint_id;
     gpio_plug* plug;
-    uint16_t endpoint;
 };
 
-extern int get_endpoint(gpio_plug* plug);
-extern gpio_plug* get_gpio_plug(uint16_t endpoint);
+extern int get_gpio_index(uint16_t endpoint_id);
 
 typedef void *app_driver_handle_t;
 
@@ -39,7 +47,16 @@ typedef void *app_driver_handle_t;
  * @return Handle on success.
  * @return NULL in case of failure.
  */
-app_driver_handle_t app_driver_plug_init(gpio_plug *plug);
+app_driver_handle_t app_driver_plugin_unit_init(gpio_plug* plug);
+
+/** Set default values for the plug driver
+ *
+ * @param[in] endpoint_id Endpoint ID of the attribute.
+ *
+ * @return ESP_OK on success.
+ * @return error in case of failure.
+ */
+esp_err_t app_driver_plugin_unit_set_defaults(uint16_t endpoint_id, gpio_plug* plug);
 
 /** Initialize the button driver
  *
@@ -65,7 +82,6 @@ app_driver_handle_t app_driver_button_init();
  */
 esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, uint16_t endpoint_id, uint32_t cluster_id,
                                       uint32_t attribute_id, esp_matter_attr_val_t *val);
-
 
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
 #define ESP_OPENTHREAD_DEFAULT_RADIO_CONFIG()                                           \

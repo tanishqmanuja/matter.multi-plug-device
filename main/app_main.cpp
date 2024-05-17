@@ -5,7 +5,7 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
-
+// #include <vector>
 #include <esp_err.h>
 #include <esp_log.h>
 #include <nvs_flash.h>
@@ -17,19 +17,22 @@
 #include <common_macros.h>
 #include <app_priv.h>
 #include <app_reset.h>
+#include "soc/gpio_num.h"
+
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
 #include <platform/ESP32/OpenthreadLauncher.h>
 #endif
 
 #include <app/server/CommissioningWindowManager.h>
 #include <app/server/Server.h>
-#include "driver/gpio.h"
 
-// #define CONFIG_MAX_CONFIGURABLE_PLUGS 4
+// #include "driver/gpio.h"
 
 static const char *TAG = "app_main";
 static uint16_t configured_plugs = 0;
-static plug_endpoint plug_list[CONFIG_MAX_CONFIGURABLE_PLUGS];
+static plugin_unit_endpoint plugin_unit_list[CONFIG_MAX_CONFIGURABLE_PLUGS];
+
+// std::vector<gpio_num_t> gpio = {GPIO_CHANNEL_1, GPIO_CHANNEL_2, GPIO_CHANNEL_3, GPIO_CHANNEL_4};
 
 using namespace esp_matter;
 using namespace esp_matter::attribute;
@@ -129,6 +132,19 @@ static esp_err_t app_attribute_update_cb(attribute::callback_type_t type, uint16
         /* Driver update */
         app_driver_handle_t driver_handle = (app_driver_handle_t)priv_data;
         err = app_driver_attribute_update(driver_handle, endpoint_id, cluster_id, attribute_id, val);
+
+        /* Plug update */
+        // if (cluster_id == OnOff::Id) {
+        //     // gpio_plug* handle = get_gpio_plug(endpoint_id);
+        //     if (attribute_id == OnOff::Attributes::OnOff::Id) {
+        //         for(int i = 0; i < configured_plugs; i++) {
+        //             if (plugin_unit_list[i].endpoint_id == endpoint_id) {
+        //             //    gpio_set_level(plugin_unit_list[i].plug->GPIO_PIN_VALUE, val->val.b);
+        //                gpio_set_level(gpio.at(i), val->val.b);
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     return err;
@@ -139,12 +155,13 @@ static esp_err_t create_plug(struct gpio_plug* plug, node_t* node)
     esp_err_t err = ESP_OK;
 
     /* Initialize driver */
-    app_driver_handle_t plug_handle = app_driver_plug_init(plug);
+    app_driver_handle_t plugin_unit_handle = app_driver_plugin_unit_init(plug);
 
     /* Create a new endpoint. */
-    on_off_plugin_unit::config_t plug_config;
-    plug_config.on_off.lighting.start_up_on_off = nullptr;
-    endpoint_t *endpoint = on_off_plugin_unit::create(node, &plug_config, ENDPOINT_FLAG_NONE, plug_handle);
+    on_off_plugin_unit::config_t plugin_unit_config;
+    plugin_unit_config.on_off.on_off = DEFAULT_POWER;
+    plugin_unit_config.on_off.lighting.start_up_on_off = nullptr; // Uses previously saved value from flash
+    endpoint_t *endpoint = on_off_plugin_unit::create(node, &plugin_unit_config, ENDPOINT_FLAG_NONE, plugin_unit_handle);
 
     /* These node and endpoint handles can be used to create/add other endpoints and clusters. */
     if (!node || !endpoint)
@@ -155,7 +172,7 @@ static esp_err_t create_plug(struct gpio_plug* plug, node_t* node)
     }
 
     for (int i = 0; i < configured_plugs; i++) {
-        if (plug_list[i].plug == plug) {
+        if (plugin_unit_list[i].plug == plug) {
             ESP_LOGI(TAG, "Plug already configured: %d", endpoint::get_id(endpoint));
             return ESP_OK;
         }
@@ -163,12 +180,12 @@ static esp_err_t create_plug(struct gpio_plug* plug, node_t* node)
 
     /* Check for maximum physical buttons that can be configured. */
     if (configured_plugs <CONFIG_MAX_CONFIGURABLE_PLUGS) {
-        plug_list[configured_plugs].plug = plug;
-        plug_list[configured_plugs].endpoint = endpoint::get_id(endpoint);
+        plugin_unit_list[configured_plugs].plug = plug;
+        plugin_unit_list[configured_plugs].endpoint_id = endpoint::get_id(endpoint);
+        app_driver_plugin_unit_set_defaults(endpoint::get_id(endpoint), plug);
+        // ESP_LOGI(TAG, "Plug configured: EP %d, GPIO %d", plug_list[configured_plugs].endpoint, plug_list[configured_plugs].plug->GPIO_PIN_VALUE);
         configured_plugs++;
-    }
-    else
-    {
+    } else {
         ESP_LOGI(TAG, "Cannot configure more plugs");
         err = ESP_FAIL;
         return err;
@@ -178,25 +195,22 @@ static esp_err_t create_plug(struct gpio_plug* plug, node_t* node)
     plug_endpoint_id = endpoint::get_id(endpoint);
     ESP_LOGI(TAG, "Plug created with endpoint_id %d", plug_endpoint_id);
 
+    // cluster_t *cluster = cluster::create(endpoint,cluster::on_off::feature::lighting::get_id(),CLUSTER_FLAG_SERVER);
+    // esp_matter_attr_val_t val = esp_matter_invalid(NULL);
+    // attribute_t *attribute = attribute::create(cluster,OnOff::Attributes::OnOff::Id,ATTRIBUTE_FLAG_NONE,val);
+
     return err;
 }
 
-int get_endpoint(gpio_plug* plug) {
-    for (int i = 0; i < configured_plugs; i++) {
-        if (plug_list[i].plug == plug) {
-            return plug_list[i].endpoint;
+int get_gpio_index(uint16_t endpoint_id)
+{
+    for(int i = 0; i < configured_plugs; i++) {
+        // ESP_LOGI(TAG, "Endpoint id: %d, GPIO index: %d", plugin_unit_list[i].endpoint_id, plugin_unit_list[i].plug->GPIO_PIN_VALUE);
+        if (plugin_unit_list[i].endpoint_id == endpoint_id) {
+            return i;
         }
     }
     return -1;
-}
-
-gpio_plug* get_gpio_plug(uint16_t endpoint) {
-    for (int i = 0; i < configured_plugs; i++) {
-        if (plug_list[i].endpoint == endpoint) {
-            return plug_list[i].plug;
-        }
-    }
-    return nullptr;
 }
 
 extern "C" void app_main()
@@ -216,11 +230,17 @@ extern "C" void app_main()
     ABORT_APP_ON_FAILURE(node != nullptr, ESP_LOGE(TAG, "Failed to create Matter node"));
 
     /* Create Plugs */
-    struct gpio_plug plug1 = { .GPIO_PIN_VALUE = GPIO_NUM_13 };
+    struct gpio_plug plug1 = { .GPIO_PIN_VALUE = GPIO_CHANNEL_1 };
     create_plug(&plug1, node);
 
-    struct gpio_plug plug2 = { .GPIO_PIN_VALUE = GPIO_NUM_14 };
+    struct gpio_plug plug2 = { .GPIO_PIN_VALUE = GPIO_CHANNEL_2 };
     create_plug(&plug2, node);
+
+    struct gpio_plug plug3 = { .GPIO_PIN_VALUE = GPIO_CHANNEL_3 };
+    create_plug(&plug3, node);
+
+    struct gpio_plug plug4 = { .GPIO_PIN_VALUE = GPIO_CHANNEL_4 };
+    create_plug(&plug4, node);
 
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
     /* Set OpenThread platform config */
