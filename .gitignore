@@ -31,8 +31,13 @@
 *.out
 *.app
 
-# Custom
+# IDE
 .vscode/
+
+# CMake
 build/
 managed_components/
 dependencies.lock
+
+# Logs
+log.*
