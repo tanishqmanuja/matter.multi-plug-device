@@ -32,6 +32,10 @@ esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, uint16_
 {
     esp_err_t err = ESP_OK;
 
+    if(endpoint_id == 0) {
+        return ESP_OK;
+    }
+
     bool state = val->val.b;
     gpio_plug* plug = get_gpio_plug(endpoint_id);
 
