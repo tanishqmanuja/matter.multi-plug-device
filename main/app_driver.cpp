@@ -36,12 +36,16 @@ esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, uint16_
     gpio_plug* plug = get_gpio_plug(endpoint_id);
 
     if(plug != nullptr) {
-        gpio_set_level((gpio_num_t) plug->GPIO_PIN_VALUE,state);
-
-        ESP_LOGE(TAG,"toggling GPIO %d", (gpio_num_t)plug->GPIO_PIN_VALUE);
-        ESP_LOGE(TAG, "SET Endpoint %d to %d", endpoint_id, state);
+        err = gpio_set_level((gpio_num_t) plug->GPIO_PIN_VALUE,state);
+        if(err == ESP_OK) {
+            ESP_LOGE(TAG,"toggling GPIO %d", (gpio_num_t)plug->GPIO_PIN_VALUE);
+            ESP_LOGE(TAG, "SET Endpoint %d to %d", endpoint_id, state);
+        } else {
+            ESP_LOGE(TAG,"Error toggling GPIO %d, error %d", (gpio_num_t)plug->GPIO_PIN_VALUE, err);
+        }
     } else {
         ESP_LOGE(TAG,"Error finding GPIO for endpoint %d", endpoint_id);
+        return ESP_FAIL;
     }
 
     return err;
@@ -49,8 +53,12 @@ esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, uint16_
 
 app_driver_handle_t app_driver_plug_init(gpio_plug * plug)
 {
-    gpio_set_direction(plug->GPIO_PIN_VALUE, GPIO_MODE_OUTPUT);
-    return nullptr;
+    esp_err_t err = gpio_set_direction(plug->GPIO_PIN_VALUE, GPIO_MODE_OUTPUT);
+    if(err != ESP_OK) {
+        ESP_LOGE(TAG, "Error initializing GPIO %d", plug->GPIO_PIN_VALUE);
+        return nullptr; // Enable restore prev value from flash
+    }
+    return (app_driver_handle_t)plug;
 }
 
 app_driver_handle_t app_driver_button_init()

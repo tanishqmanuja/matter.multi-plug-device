@@ -156,7 +156,8 @@ static esp_err_t create_plug(struct gpio_plug* plug, node_t* node)
 
     for (int i = 0; i < configured_plugs; i++) {
         if (plug_list[i].plug == plug) {
-            break;
+            ESP_LOGI(TAG, "Plug already configured: %d", endpoint::get_id(endpoint));
+            return ESP_OK;
         }
     }
 
@@ -215,12 +216,10 @@ extern "C" void app_main()
     ABORT_APP_ON_FAILURE(node != nullptr, ESP_LOGE(TAG, "Failed to create Matter node"));
 
     /* Create Plugs */
-    struct gpio_plug plug1;
-    plug1.GPIO_PIN_VALUE = GPIO_NUM_13;
+    struct gpio_plug plug1 = { .GPIO_PIN_VALUE = GPIO_NUM_13 };
     create_plug(&plug1, node);
 
-    struct gpio_plug plug2;
-    plug2.GPIO_PIN_VALUE = GPIO_NUM_14;
+    struct gpio_plug plug2 = { .GPIO_PIN_VALUE = GPIO_NUM_14 };
     create_plug(&plug2, node);
 
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
