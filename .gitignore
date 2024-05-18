@@ -44,6 +44,7 @@ dependencies.lock
 
 # Local Config
 sdkconfig
+sdkconfig.old
 
 # Logs
 log.*
