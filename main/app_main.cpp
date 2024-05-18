@@ -5,7 +5,6 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
-// #include <vector>
 #include <esp_err.h>
 #include <esp_log.h>
 #include <nvs_flash.h>
@@ -17,7 +16,6 @@
 #include <common_macros.h>
 #include <app_priv.h>
 #include <app_reset.h>
-#include "soc/gpio_num.h"
 
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
 #include <platform/ESP32/OpenthreadLauncher.h>
@@ -26,13 +24,9 @@
 #include <app/server/CommissioningWindowManager.h>
 #include <app/server/Server.h>
 
-// #include "driver/gpio.h"
-
 static const char *TAG = "app_main";
 static uint16_t configured_plugs = 0;
 static plugin_unit_endpoint plugin_unit_list[CONFIG_MAX_CONFIGURABLE_PLUGS];
-
-// std::vector<gpio_num_t> gpio = {GPIO_CHANNEL_1, GPIO_CHANNEL_2, GPIO_CHANNEL_3, GPIO_CHANNEL_4};
 
 using namespace esp_matter;
 using namespace esp_matter::attribute;
@@ -41,8 +35,7 @@ using namespace chip::app::Clusters;
 
 constexpr auto k_timeout_seconds = 300;
 
-static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
-{
+static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
     switch (event->Type) {
     case chip::DeviceLayer::DeviceEventType::kInterfaceIpAddressChanged:
         ESP_LOGI(TAG, "Interface IP Address changed");
@@ -114,8 +107,7 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
 // This callback is invoked when clients interact with the Identify Cluster.
 // In the callback implementation, an endpoint can identify itself. (e.g., by flashing an LED or light).
 static esp_err_t app_identification_cb(identification::callback_type_t type, uint16_t endpoint_id, uint8_t effect_id,
-                                       uint8_t effect_variant, void *priv_data)
-{
+                                       uint8_t effect_variant, void *priv_data) {
     ESP_LOGI(TAG, "Identification callback: type: %u, effect: %u, variant: %u", type, effect_id, effect_variant);
     return ESP_OK;
 }
@@ -124,34 +116,19 @@ static esp_err_t app_identification_cb(identification::callback_type_t type, uin
 // handle the desired attributes and return an appropriate error code. If the attribute
 // is not of your interest, please do not return an error code and strictly return ESP_OK.
 static esp_err_t app_attribute_update_cb(attribute::callback_type_t type, uint16_t endpoint_id, uint32_t cluster_id,
-                                         uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data)
-{
+                                         uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data) {
     esp_err_t err = ESP_OK;
 
     if (type == PRE_UPDATE) {
         /* Driver update */
         app_driver_handle_t driver_handle = (app_driver_handle_t)priv_data;
         err = app_driver_attribute_update(driver_handle, endpoint_id, cluster_id, attribute_id, val);
-
-        /* Plug update */
-        // if (cluster_id == OnOff::Id) {
-        //     // gpio_plug* handle = get_gpio_plug(endpoint_id);
-        //     if (attribute_id == OnOff::Attributes::OnOff::Id) {
-        //         for(int i = 0; i < configured_plugs; i++) {
-        //             if (plugin_unit_list[i].endpoint_id == endpoint_id) {
-        //             //    gpio_set_level(plugin_unit_list[i].plug->GPIO_PIN_VALUE, val->val.b);
-        //                gpio_set_level(gpio.at(i), val->val.b);
-        //             }
-        //         }
-        //     }
-        // }
     }
 
     return err;
 }
 
-static esp_err_t create_plug(struct gpio_plug* plug, node_t* node)
-{
+static esp_err_t create_plug(struct gpio_plug* plug, node_t* node) {
     esp_err_t err = ESP_OK;
 
     /* Initialize driver */
@@ -183,7 +160,6 @@ static esp_err_t create_plug(struct gpio_plug* plug, node_t* node)
         plugin_unit_list[configured_plugs].plug = plug;
         plugin_unit_list[configured_plugs].endpoint_id = endpoint::get_id(endpoint);
         app_driver_plugin_unit_set_defaults(endpoint::get_id(endpoint), plug);
-        // ESP_LOGI(TAG, "Plug configured: EP %d, GPIO %d", plug_list[configured_plugs].endpoint, plug_list[configured_plugs].plug->GPIO_PIN_VALUE);
         configured_plugs++;
     } else {
         ESP_LOGI(TAG, "Cannot configure more plugs");
@@ -195,17 +171,11 @@ static esp_err_t create_plug(struct gpio_plug* plug, node_t* node)
     plug_endpoint_id = endpoint::get_id(endpoint);
     ESP_LOGI(TAG, "Plug created with endpoint_id %d", plug_endpoint_id);
 
-    // cluster_t *cluster = cluster::create(endpoint,cluster::on_off::feature::lighting::get_id(),CLUSTER_FLAG_SERVER);
-    // esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-    // attribute_t *attribute = attribute::create(cluster,OnOff::Attributes::OnOff::Id,ATTRIBUTE_FLAG_NONE,val);
-
     return err;
 }
 
-int get_gpio_index(uint16_t endpoint_id)
-{
+int get_gpio_index(uint16_t endpoint_id) {
     for(int i = 0; i < configured_plugs; i++) {
-        // ESP_LOGI(TAG, "Endpoint id: %d, GPIO index: %d", plugin_unit_list[i].endpoint_id, plugin_unit_list[i].plug->GPIO_PIN_VALUE);
         if (plugin_unit_list[i].endpoint_id == endpoint_id) {
             return i;
         }
@@ -213,8 +183,7 @@ int get_gpio_index(uint16_t endpoint_id)
     return -1;
 }
 
-extern "C" void app_main()
-{
+extern "C" void app_main() {
     esp_err_t err = ESP_OK;
 
     /* Initialize the ESP NVS layer */
@@ -229,7 +198,7 @@ extern "C" void app_main()
     node_t *node = node::create(&node_config, app_attribute_update_cb, app_identification_cb);
     ABORT_APP_ON_FAILURE(node != nullptr, ESP_LOGE(TAG, "Failed to create Matter node"));
 
-    /* Create Plugs */
+    /* Create and initialize plugs */
     struct gpio_plug plug1 = { .GPIO_PIN_VALUE = GPIO_CHANNEL_1 };
     create_plug(&plug1, node);
 
@@ -242,7 +211,8 @@ extern "C" void app_main()
     struct gpio_plug plug4 = { .GPIO_PIN_VALUE = GPIO_CHANNEL_4 };
     create_plug(&plug4, node);
 
-    app_driver_plugin_unit_power_init();
+    /* Initialize plug power supply */
+    app_driver_plugin_unit_power_supply_init();
 
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
     /* Set OpenThread platform config */

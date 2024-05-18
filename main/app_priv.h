@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <cstdint>
 #include <esp_err.h>
 #include <esp_matter.h>
 #include <hal/gpio_types.h>
@@ -60,14 +59,14 @@ app_driver_handle_t app_driver_plugin_unit_init(gpio_plug* plug);
  */
 esp_err_t app_driver_plugin_unit_set_defaults(uint16_t endpoint_id, gpio_plug* plug);
 
-/** Initialize the power driver
+/** Initialize the power supply driver
  *
- * This initializes the power driver associated with the selected board.
+ * This initializes the power supply driver associated with the relay module.
  *
  * @return Handle on success.
  * @return NULL in case of failure.
  */
-app_driver_handle_t app_driver_plugin_unit_power_init();
+app_driver_handle_t app_driver_plugin_unit_power_supply_init();
 
 /** Initialize the button driver
  *
