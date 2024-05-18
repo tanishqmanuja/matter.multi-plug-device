@@ -171,6 +171,9 @@ static esp_err_t create_plug(struct gpio_plug* plug, node_t* node) {
     plug_endpoint_id = endpoint::get_id(endpoint);
     ESP_LOGI(TAG, "Plug created with endpoint_id %d", plug_endpoint_id);
 
+    cluster::fixed_label::config_t fl_config;
+    cluster_t *fl_cluster = cluster::fixed_label::create(endpoint, &fl_config, CLUSTER_FLAG_SERVER);
+
     return err;
 }
 
