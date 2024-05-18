@@ -51,7 +51,7 @@ esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, uint16_
 app_driver_handle_t app_driver_plugin_unit_init(gpio_plug* plug) {
     /* Initialize plug */
     gpio_set_direction(plug->GPIO_PIN_VALUE, GPIO_MODE_OUTPUT);
-    gpio_set_level(plug->GPIO_PIN_VALUE, DEFAULT_POWER);
+    gpio_set_pull_mode(plug->GPIO_PIN_VALUE, GPIO_PULLUP_ONLY);
     return (app_driver_handle_t)plug;
 }
 
