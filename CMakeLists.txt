@@ -42,12 +42,12 @@ set(EXTRA_COMPONENT_DIRS
     "${ESP_MATTER_PATH}/device_hal/device"
     ${extra_components_dirs_append})
 
-project(four_plug)
+project(multi_plug)
 
 # WARNING: This is just an example for using key for decrypting the encrypted OTA image
 # Please do not use it as is.
 if(CONFIG_ENABLE_ENCRYPTED_OTA)
-    target_add_binary_data(room_air_conditioner.elf "esp_image_encryption_key.pem" TEXT)
+    target_add_binary_data(multi_plug.elf "esp_image_encryption_key.pem" TEXT)
 endif()
 
 if(CONFIG_IDF_TARGET_ESP32C2)

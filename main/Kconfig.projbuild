@@ -1,4 +1,4 @@
- menu "Four Plug Device"
+ menu "Multi Plug Device"
     config MAX_CONFIGURABLE_PLUGS
         int "Maximum physical configurable plugs"
         default 4
