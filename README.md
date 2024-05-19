@@ -33,3 +33,7 @@ out/host/chip-cert gen-cd -f 1 -V 0xFFF1 -p 0x8001 -d 0x0016 \
               --hw-ver 1 --hw-ver-str DevKit \
               --fixed-labels "0/fixedname/Multi Plug" "1/fixedname/Plug 1" "2/fixedname/Plug 2" "3/fixedname/Plug 3" "4/fixedname/Plug 4"
 ```
+
+## QR Code
+
+![QR Code](./mfg_binaries/f013439d-9ee1-4539-a7c1-18b0886e3fe4-qrcode.png)
