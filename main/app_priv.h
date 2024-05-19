@@ -17,6 +17,8 @@
 #include "esp_openthread_types.h"
 #endif
 
+#define DEVICE_NAME "Multi Plug Device"
+
 #define DEFAULT_POWER false
 
 #define GPIO_CHANNEL_POWER (gpio_num_t)GPIO_NUM_4

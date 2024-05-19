@@ -172,7 +172,7 @@ static esp_err_t create_plug(struct gpio_plug* plug, node_t* node) {
     ESP_LOGI(TAG, "Plug created with endpoint_id %d", plug_endpoint_id);
 
     cluster::fixed_label::config_t fl_config;
-    cluster_t *fl_cluster = cluster::fixed_label::create(endpoint, &fl_config, CLUSTER_FLAG_SERVER);
+    cluster::fixed_label::create(endpoint, &fl_config, CLUSTER_FLAG_SERVER);
 
     return err;
 }
@@ -198,6 +198,7 @@ extern "C" void app_main() {
 
     /* Create a Matter node and add the mandatory Root Node device type on endpoint 0 */
     node::config_t node_config;
+    snprintf(node_config.root_node.basic_information.node_label, sizeof(node_config.root_node.basic_information.node_label), DEVICE_NAME);
     node_t *node = node::create(&node_config, app_attribute_update_cb, app_identification_cb);
     ABORT_APP_ON_FAILURE(node != nullptr, ESP_LOGE(TAG, "Failed to create Matter node"));
 
