@@ -48,3 +48,6 @@ sdkconfig.old
 
 # Logs
 log.*
+
+# Output
+out
