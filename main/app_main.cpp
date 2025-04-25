@@ -169,13 +169,6 @@ static esp_err_t create_plug(gpio_plug *plug, node_t *node)
     /* GPIO pin initialization */
     err = app_driver_plugin_unit_init(plug);
 
-    for (int i = 0; i < configure_plugs; i++) {
-        if (plugin_unit_list[i].plug == plug->GPIO_PIN_VALUE) {
-            ESP_LOGI(TAG, "Plug already configured: %d", plug->GPIO_PIN_VALUE);
-            return ESP_ERR_INVALID_STATE;
-        }
-    }
-
     // Check for maximum plugs that can be configured.
     if (configure_plugs < CONFIG_NUM_PLUGS) {
         plugin_unit_list[configure_plugs].plug = plug->GPIO_PIN_VALUE;
