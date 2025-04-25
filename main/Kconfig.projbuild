@@ -1,6 +1,46 @@
  menu "Multi Plug Device"
-    config MAX_CONFIGURABLE_PLUGS
-        int "Maximum physical configurable plugs"
+    config NUM_PLUGS
+        int "Number of total plugs"
         default 4
-        range 1 4
+        range 1 6
+
+    config ACTIVE_HIGH_PLUGS
+        bool "Active high plugs"
+        default y
+        help
+            Inverts the logic of the GPIO plugs.
+
+    config GPIO_POWER_OUTLET
+        int "GPIO for power outlet"
+        default 4
+
+    config GPIO_PLUG_1
+        int "GPIO for plug 1"
+        default 32
+        depends on (NUM_PLUGS >= 1)
+
+    config GPIO_PLUG_2
+        int "GPIO for plug 2"
+        default 33
+        depends on (NUM_PLUGS >= 2)
+
+    config GPIO_PLUG_3
+        int "GPIO for plug 3"
+        default 27
+        depends on (NUM_PLUGS >= 3)
+
+    config GPIO_PLUG_4
+        int "GPIO for plug 4"
+        default 26
+        depends on (NUM_PLUGS >= 4)
+
+    config GPIO_PLUG_5
+        int "GPIO for plug 5"
+        default 13
+        depends on (NUM_PLUGS >= 5)
+
+    config GPIO_PLUG_6
+        int "GPIO for plug 6"
+        default 14
+        depends on (NUM_PLUGS >= 6)
 endmenu

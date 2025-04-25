@@ -19,27 +19,22 @@
 
 #define DEVICE_NAME "Multi Plug Device"
 
-#define DEFAULT_POWER false
+/* Plugs state on when initializing */
+#define DEFAULT_ON_OFF false
 
-#define GPIO_CHANNEL_POWER (gpio_num_t)GPIO_NUM_4
-
-#define GPIO_CHANNEL_1 (gpio_num_t)GPIO_NUM_32
-#define GPIO_CHANNEL_2 (gpio_num_t)GPIO_NUM_33
-#define GPIO_CHANNEL_3 (gpio_num_t)GPIO_NUM_27
-#define GPIO_CHANNEL_4 (gpio_num_t)GPIO_NUM_26
-
-struct gpio_plug
-{
-      gpio_num_t GPIO_PIN_VALUE;
+struct gpio_plug {
+    gpio_num_t GPIO_PIN_VALUE;
 };
 
-struct plugin_unit_endpoint
-{
+struct plugin_endpoint {
     uint16_t endpoint_id;
-    gpio_plug* plug;
+    gpio_num_t plug;
 };
 
-extern int get_gpio_index(uint16_t endpoint_id);
+gpio_num_t get_gpio(uint16_t endpoint_id);
+
+extern plugin_endpoint plugin_unit_list[CONFIG_NUM_PLUGS];
+extern uint16_t configure_plugs;
 
 typedef void *app_driver_handle_t;
 
@@ -50,7 +45,7 @@ typedef void *app_driver_handle_t;
  * @return Handle on success.
  * @return NULL in case of failure.
  */
-app_driver_handle_t app_driver_plugin_unit_init(gpio_plug* plug);
+esp_err_t app_driver_plugin_unit_init(const gpio_plug *plug);
 
 /** Set default values for the plug driver
  *
@@ -59,7 +54,7 @@ app_driver_handle_t app_driver_plugin_unit_init(gpio_plug* plug);
  * @return ESP_OK on success.
  * @return error in case of failure.
  */
-esp_err_t app_driver_plugin_unit_set_defaults(uint16_t endpoint_id, gpio_plug* plug);
+esp_err_t app_driver_plugin_unit_set_defaults(uint16_t endpoint_id);
 
 /** Initialize the power supply driver
  *
@@ -68,7 +63,7 @@ esp_err_t app_driver_plugin_unit_set_defaults(uint16_t endpoint_id, gpio_plug* p
  * @return Handle on success.
  * @return NULL in case of failure.
  */
-app_driver_handle_t app_driver_plugin_unit_power_supply_init();
+esp_err_t app_driver_plugin_unit_power_supply_init();
 
 /** Initialize the button driver
  *
@@ -96,18 +91,20 @@ esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle, uint16_
                                       uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
-#define ESP_OPENTHREAD_DEFAULT_RADIO_CONFIG()                                           \
-    {                                                                                   \
-        .radio_mode = RADIO_MODE_NATIVE,                                                \
+#define ESP_OPENTHREAD_DEFAULT_RADIO_CONFIG() \
+    {                                         \
+        .radio_mode = RADIO_MODE_NATIVE,      \
     }
 
-#define ESP_OPENTHREAD_DEFAULT_HOST_CONFIG()                                            \
-    {                                                                                   \
-        .host_connection_mode = HOST_CONNECTION_MODE_NONE,                              \
+#define ESP_OPENTHREAD_DEFAULT_HOST_CONFIG()               \
+    {                                                      \
+        .host_connection_mode = HOST_CONNECTION_MODE_NONE, \
     }
 
-#define ESP_OPENTHREAD_DEFAULT_PORT_CONFIG()                                            \
-    {                                                                                   \
-        .storage_partition_name = "nvs", .netif_queue_size = 10, .task_queue_size = 10, \
+#define ESP_OPENTHREAD_DEFAULT_PORT_CONFIG() \
+    {                                        \
+        .storage_partition_name = "nvs",     \
+        .netif_queue_size = 10,              \
+        .task_queue_size = 10,               \
     }
 #endif
