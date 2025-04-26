@@ -8,6 +8,7 @@
 
 #include "esp_matter_attribute_utils.h"
 #include "esp_matter_core.h"
+#include "iot_button.h"
 #include <cstdint>
 #include <esp_log.h>
 #include <stdlib.h>
@@ -192,6 +193,6 @@ app_driver_handle_t app_driver_button_init()
         return NULL;
     }
 
-    iot_button_register_cb(handle, BUTTON_PRESS_DOWN, NULL, app_driver_button_toggle_cb, NULL);
+    iot_button_register_cb(handle, BUTTON_SINGLE_CLICK, NULL, app_driver_button_toggle_cb, NULL);
     return (app_driver_handle_t)handle;
 }
